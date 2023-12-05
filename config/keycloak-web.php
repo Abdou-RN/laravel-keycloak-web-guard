@@ -60,11 +60,12 @@ return [
      * So, if you make it false, you shoul register a named 'keycloak.login' route and extend
      * the Vizir\KeycloakWebGuard\Controllers\AuthController controller.
      */
+    
     'routes' => [
-        'login' => 'login',
-        'logout' => 'logout',
+        'login' => 'admin/login-keycloak',
+        'logout' => 'admin/logout-keycloak',
         'register' => 'register',
-        'callback' => 'callback',
+        'callback' => 'admin/callback',
     ],
 
     /**
@@ -73,4 +74,18 @@ return [
     * @link http://docs.guzzlephp.org/en/stable/request-options.html
     */
    'guzzle_options' => [],
+
+   'client_idp_alias' => env('CLIENT_IDP_ALIAS', ''),
+
+   'client_idp_name' => env('CLIENT_IDP_NAME', ''),
+
+   'id_hint' => env('CLIENT_IDP_HINT', false),
+
+   'client_table_name' => env('CLIENT_TABLE_NAME', 'clients'),
+
+   'client_alias_column_name' => env('CLIENT_ALIAS_COLUMN_NAME', 'idp'),
+
+   'client_name_column_name' => env('CLIENT_NAME_COLUMN_NAME', 'name'),
+
+   'client_domaine_column_name' => env('CLIENT_DOMAINE_COLUMN_NAME', 'domaine'),
 ];

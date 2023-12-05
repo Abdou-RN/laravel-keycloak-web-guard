@@ -94,6 +94,61 @@ class KeycloakService
      * @var ClientInterface
      */
     protected $httpClient;
+    
+    /**
+     * Client IDP Alias
+     *
+     * @var string
+     */
+    protected $clientIDPAlias;
+
+    /**
+     * Client IDP Name
+     *
+     * @var string
+     */
+    protected $clientIDPName;
+
+      /**
+     * Client Table name
+     *
+     * @var string
+     */
+    protected $clientTableName;
+
+    /**
+     * Client Alias Column name
+     *
+     * @var string
+     */
+    protected $clientAliasColumnName;
+
+
+    /**
+     * Client Name Column name
+     *
+     * @var string
+     */
+    protected $clientNameColumnName;
+
+
+    /**
+     * Client IAM Name - used in Button (Azure Company Nam, OKTA company Name)
+     *
+     * @var string
+     */
+    protected $clientIAMColumnName;
+
+
+
+    /**
+     * Client IDP Activation
+     *
+     * @var boolean
+     */
+    protected $activateIDP;
+
+
 
     /**
      * The Constructor
@@ -133,6 +188,35 @@ class KeycloakService
             $this->redirectLogout = Config::get('keycloak-web.redirect_logout');
         }
 
+        if (is_null($this->clientIDPAlias)) {
+            $this->clientAlias = trim(Config::get('keycloak-web.client_idp_alias'), '');
+        }
+
+        if (is_null($this->clientIDPName)) {
+            $this->clientName = trim(Config::get('keycloak-web.client_idp_name'), '');
+        }
+
+        if (is_null($this->activateIDP)) {
+            $this->clientName = trim(Config::get('keycloak-web.id_hint'), false);
+        }
+
+        if (is_null($this->cientTableName)) {
+            $this->cientTableName = trim(Config::get('keycloak-web.client_table_name'), 'clients');
+        }
+
+        if (is_null($this->clientAliasColumnName)) {
+            $this->cientAliasColumnName = trim(Config::get('keycloak-web.client_alias_column_name'), 'idp');
+        }
+
+        if (is_null($this->clientNameColumnName)) {
+            $this->cientNameColumnName = Config::get('keycloak-web.client_name_column_name', 'name');
+        }
+
+        if (is_null($this->clientIAMColumnName)) {
+            $this->clientIAMColumnName = Config::get('keycloak-web.client_iam_column_name', 'name');
+        }
+
+
         $this->state = $this->generateRandomState();
         $this->httpClient = $client;
     }
@@ -154,8 +238,18 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
             'state' => $this->getState(),
         ];
+       
+        if($this->activateIDP && $this->clientTableName && $this->clientDomaineColumnName){
+            $domaine =  $_SERVER['HTTP_HOST'];
+            $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine.'%')->first();
+            if($client && $client->{$this->clientAliasColumnName} && $client->{$this->clientNameColumnName} && trim($client->{$this->clientAliasColumnName}) != ""){
+               $params[$this->clientIDPAlias] = $client->{$this->clientAliasColumnName};
+               $params[$this->clientIDPName] = $client->{$this->clientNameColumnName};
+            }
+        }
 
-        return $this->buildUrl($url, $params);
+        $link = $this->buildUrl($url, $params);
+        return $link;
     }
 
     /**
