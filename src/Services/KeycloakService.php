@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Vizir\KeycloakWebGuard\Auth\KeycloakAccessToken;
 use Vizir\KeycloakWebGuard\Auth\Guard\KeycloakWebGuard;
+use Illuminate\Support\Facades\DB;
 
 class KeycloakService
 {
@@ -137,7 +138,7 @@ class KeycloakService
      *
      * @var string
      */
-    protected $clientIAMColumnName;
+    protected $clientDomaineColumnName;
 
 
 
@@ -189,31 +190,31 @@ class KeycloakService
         }
 
         if (is_null($this->clientIDPAlias)) {
-            $this->clientAlias = trim(Config::get('keycloak-web.client_idp_alias'), '');
+            $this->clientIDPAlias = Config::get('keycloak-web.client_idp_alias');
         }
 
         if (is_null($this->clientIDPName)) {
-            $this->clientName = trim(Config::get('keycloak-web.client_idp_name'), '');
+            $this->clientIDPName = Config::get('keycloak-web.client_idp_name');
         }
 
         if (is_null($this->activateIDP)) {
-            $this->clientName = trim(Config::get('keycloak-web.id_hint'), false);
+            $this->activateIDP = Config::get('keycloak-web.idp_hint');
         }
 
-        if (is_null($this->cientTableName)) {
-            $this->cientTableName = trim(Config::get('keycloak-web.client_table_name'), 'clients');
+        if (is_null($this->clientTableName)) {
+            $this->clientTableName = Config::get('keycloak-web.client_table_name');
         }
 
         if (is_null($this->clientAliasColumnName)) {
-            $this->cientAliasColumnName = trim(Config::get('keycloak-web.client_alias_column_name'), 'idp');
+            $this->clientAliasColumnName = Config::get('keycloak-web.client_alias_column_name');
         }
 
         if (is_null($this->clientNameColumnName)) {
-            $this->cientNameColumnName = Config::get('keycloak-web.client_name_column_name', 'name');
+            $this->clientNameColumnName = Config::get('keycloak-web.client_name_column_name', 'name');
         }
 
-        if (is_null($this->clientIAMColumnName)) {
-            $this->clientIAMColumnName = Config::get('keycloak-web.client_iam_column_name', 'name');
+        if (is_null($this->clientDomaineColumnName)) {
+            $this->clientDomaineColumnName = Config::get('keycloak-web.client_domaine_column_name', 'name');
         }
 
 
@@ -238,10 +239,11 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
             'state' => $this->getState(),
         ];
-       
+    
         if($this->activateIDP && $this->clientTableName && $this->clientDomaineColumnName){
             $domaine =  $_SERVER['HTTP_HOST'];
             $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine.'%')->first();
+           
             if($client && $client->{$this->clientAliasColumnName} && $client->{$this->clientNameColumnName} && trim($client->{$this->clientAliasColumnName}) != ""){
                $params[$this->clientIDPAlias] = $client->{$this->clientAliasColumnName};
                $params[$this->clientIDPName] = $client->{$this->clientNameColumnName};
