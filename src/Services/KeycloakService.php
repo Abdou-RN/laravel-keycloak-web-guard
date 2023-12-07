@@ -240,16 +240,7 @@ class KeycloakService
             'state' => $this->getState(),
         ];
     
-        if($this->activateIDP && $this->clientTableName && $this->clientDomaineColumnName){
-            $domaine =  $_SERVER['HTTP_HOST'];
-            $domaine = explode(":", $domaine);
-            $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine[0].'%')->first();
-           
-            if($client && $client->{$this->clientAliasColumnName} && $client->{$this->clientNameColumnName} && trim($client->{$this->clientAliasColumnName}) != ""){
-               $params[$this->clientIDPAlias] = $client->{$this->clientAliasColumnName};
-               $params[$this->clientIDPName] = $client->{$this->clientNameColumnName};
-            }
-        }
+        $params ['redirect_uri'] .= $this->getRedirectUriForClient();
 
         $link = $this->buildUrl($url, $params);
         return $link;
@@ -280,6 +271,20 @@ class KeycloakService
         return $this->buildUrl($url, $params);
     }
 
+    public function getRedirectUriForClient(){
+        $extraParams = '';
+        if($this->activateIDP && $this->clientTableName && $this->clientDomaineColumnName){
+            $domaine =  $_SERVER['HTTP_HOST'];
+            $domaine = explode(":", $domaine);
+            $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine[0].'%')->first();
+           
+            if($client && $client->{$this->clientAliasColumnName} && $client->{$this->clientNameColumnName} && trim($client->{$this->clientAliasColumnName}) != ""){
+                $extraParams= '/?'.$this->clientIDPAlias.'='. $client->{$this->clientAliasColumnName}.'&'.$this->clientIDPName.'='.$client->{$this->clientNameColumnName};
+            }
+        }
+        return $extraParams;
+    }
+
     /**
      * Return the register URL
      *
@@ -307,6 +312,8 @@ class KeycloakService
             'grant_type' => 'authorization_code',
             'redirect_uri' => $this->callbackUrl,
         ];
+
+        $params ['redirect_uri'] .= $this->getRedirectUriForClient();
 
         if (! empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
@@ -347,6 +354,8 @@ class KeycloakService
             'refresh_token' => $credentials['refresh_token'],
             'redirect_uri' => $this->callbackUrl,
         ];
+
+        $params ['redirect_uri'] .= $this->getRedirectUriForClient();
 
         if (! empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
