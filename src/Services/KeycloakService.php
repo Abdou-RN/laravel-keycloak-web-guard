@@ -242,7 +242,8 @@ class KeycloakService
 
         if($this->activateIDP && $this->clientTableName && $this->clientDomaineColumnName){
             $domaine =  $_SERVER['HTTP_HOST'];
-            $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine.'%')->first();
+            $domaine = explode(":", $domaine);
+            $client  = DB::table($this->clientTableName)->where($this->clientDomaineColumnName,'like', '%'.$domaine[0].'%')->first();
             if($client && $client->{$this->clientAliasColumnName} && $client->{$this->clientNameColumnName} && trim($client->{$this->clientAliasColumnName}) != ""){
                $params[$this->clientIDPAlias] = $client->{$this->clientAliasColumnName};
                $params[$this->clientIDPName] = $client->{$this->clientNameColumnName};
